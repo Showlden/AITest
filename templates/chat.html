@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Простой чат</title>
+    <style>
+        .chat-box { height: 300px; border: 1px solid #ccc; overflow-y: scroll; }
+        .message { margin: 10px; padding: 8px; border-radius: 5px; }
+        .user { background-color: #e0f7fa; text-align: right; }
+        .assistant { background-color: #f1f8e9; }
+    </style>
+</head>
+<body>
+    <div id="chat-history" class="chat-box"></div>
+    <input type="text" id="message-input" placeholder="Введите сообщение...">
+    <button onclick="sendMessage()">Отправить</button>
+    <button onclick="resetChat()">Новый чат</button>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            if(!message) return;
+            
+            // Показываем сообщение сразу
+            addMessage('user', message);
+            input.value = '';
+            
+            // Отправляем на сервер
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: message})
+            });
+            
+            const data = await response.json();
+            if(data.response) {
+                addMessage('assistant', data.response);
+            }
+        }
+        
+        function resetChat() {
+            fetch('/reset', {method: 'POST'})
+            .then(() => {
+                document.getElementById('chat-history').innerHTML = '';
+            });
+        }
+        
+        function addMessage(sender, text) {
+            const chatBox = document.getElementById('chat-history');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.textContent = text;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Автопрокрутка
+        }
+    </script>
+</body>
+</html>
